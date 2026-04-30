@@ -12,7 +12,6 @@ while True:
     # for 0 degrees to 180 degrees
     # so duty_cycle can be 65535*0.5/20 to 65535*2.5/20
     # but check this, some servo brands might only want 1-2 ms
-    
     # command the servo to move from 0 to 180 degrees 
     for i in range(int(65535*0.5/20), int(65535*2.5/20), 100):
         servo.duty_cycle = i
