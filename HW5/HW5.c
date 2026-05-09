@@ -4,18 +4,22 @@
 #include "hardware/adc.h"
 #include "font.h"
 #include "ssd1306.h"
-#include "pico/timeout_helper.h"
 
 
 // I2C defines
 // This example will use I2C0 on GPIO8 (SDA) and GPIO9 (SCL) running at 400KHz.
 // Pins can be changed, see the GPIO function select table in the datasheet for information on GPIO assignments
 #define I2C_PORT i2c0
-#define I2C_SDA 8 // green
-#define I2C_SCL 9 // blue
+#define I2C_SDA 8
+#define I2C_SCL 9
 
-#define LED 25 // Pico LED
+#define LED 25 // default LED
 #define ADDR 0b0100000
+
+// MCP23008 Registers
+#define IODIR 0x00 // pin direction
+#define GPIO  0x09 // pins
+#define OLAT  0x0A // output latch
 
 int main()
 {
