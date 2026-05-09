@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(HW5 HW5.c )
+add_executable(HW5 HW5.c ssd1306.c)
 
 pico_set_program_name(HW5 "HW5")
 pico_set_program_version(HW5 "0.1")
