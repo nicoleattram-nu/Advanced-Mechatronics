@@ -1,0 +1,7 @@
+# GAME CODE GENERATED IN CLAUDE AND EDITED 
+import pgzrun
+
+
+
+
+

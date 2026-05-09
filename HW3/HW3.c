@@ -33,7 +33,7 @@ int main()
     gpio_set_dir(LED, GPIO_OUT);
     gpio_put(LED, 0); // start with LED off
 
-    // I2C Initialisation. Using it at 400Khz.
+    // I2C Initialisation. Using it at 400Khz
     i2c_init(I2C_PORT, 400*1000);
 
     gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
