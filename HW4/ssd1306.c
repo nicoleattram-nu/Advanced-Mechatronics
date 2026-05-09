@@ -8,6 +8,7 @@
 unsigned char SSD1306_ADDRESS = 0b0111100; // 7bit i2c address
 unsigned char ssd1306_buffer[513]; // 128x32/8. Every bit is a pixel except first byte
 
+
 void ssd1306_setup() {
     // first byte in ssd1306_buffer is a command
     ssd1306_buffer[0] = 0x40;
@@ -15,7 +16,7 @@ void ssd1306_setup() {
     //_CP0_SET_COUNT(0);
     //while (_CP0_GET_COUNT() < 48000000 / 2 / 50) {
     //}
-    sleep_ms(20);
+    sleep_ms(100);
     ssd1306_command(SSD1306_DISPLAYOFF);
     ssd1306_command(SSD1306_SETDISPLAYCLOCKDIV);
     ssd1306_command(0x80);

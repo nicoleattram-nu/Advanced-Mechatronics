@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "hardware/adc.h"
 #include "font.h"
 #include "ssd1306.h"
+#include "pico/timeout_helper.h"
+
 
 // I2C defines
 // This example will use I2C0 on GPIO8 (SDA) and GPIO9 (SCL) running at 400KHz.
@@ -23,6 +26,11 @@ int main()
 {
     
     stdio_init_all();
+
+    adc_init();
+    adc_gpio_init(26); // GP26 is ADC0
+    adc_select_input(0);
+
     sleep_ms(3000);  // wait 2 seconds for USB to connect
     printf("step 1 \r\n");
 
@@ -46,7 +54,8 @@ int main()
     printf("Scanning...\r\n");
     for (int addr = 0; addr < 128; addr++) {
         uint8_t buf;
-        int ret = i2c_read_blocking(i2c0, addr, &buf, 1, false);
+        int ret = i2c_read_blocking_until(i2c0, addr, &buf, 1, false, 
+                    make_timeout_time_ms(10));  // 10ms timeout per address
         if (ret >= 0) {
             printf("Found device at 0x%02X\r\n", addr);
         }
@@ -56,7 +65,8 @@ int main()
     ssd1306_setup();
 
     char test_str[] = "print test";
-    int x = 1;
+    char user_str[32];
+    int x = 10;  
 
     while (true) {
         printf("still working...\r\n");
@@ -66,30 +76,26 @@ int main()
             gpio_put(LED, 1); sleep_ms(100);
             gpio_put(LED, 0); sleep_ms(100);
         }
+        // printf("after blink\r\n");
 
-        // scanf("%31s", user_str);
-        drawString(x, 10, test_str);
-        ssd1306_update();
-        x = x+5; 
-        sleep_ms(400);
+        getString(user_str);
+        unsigned int t = to_us_since_boot(get_absolute_time());
+        
         ssd1306_clear();
 
+        drawString(x, 0, user_str);
+        drawVolts(x, 12);
+        drawFPS(x, 24, &t);
+
+        ssd1306_update();
+
+        sleep_ms(2500);
+        ssd1306_clear();
+        
     }
-
-    // // ssd1306_setup();
-
-    // printf("Scanning I2C...\r\n");
-    // for (int addr = 0; addr < 128; addr++) {
-    //     uint8_t buf;
-    //     int ret = i2c_read_blocking(I2C_PORT, addr, &buf, 1, false);
-    //     if (ret >= 0) {
-    //         printf("Found device at 0x%02X\r\n", addr);
-    //     }
-    // }
-    // printf("Scan done.\r\n");
-
-    // while(true) {} // stop here
+    
 }
+
 
 void drawChar(int x, int y, char c) { // creates each letter 
     const char *bitmap = ASCII[c - 32];
@@ -113,3 +119,38 @@ void drawString(int x, int y, const char *str) {
         str++;
         }
     }
+
+void getString(char *str) {
+    printf("enter text: \r\n");
+    scanf("%31s", str);
+    printf("got: %s\r\n", str);
+}
+
+void drawVolts(int x, int y) {
+    uint16_t raw = adc_read();
+    float volts = raw * 3.3f / 4095.0f;
+    drawString(x, y, "ADC0:");
+    drawFloat(x + 36, y, volts);
+}
+
+void drawFPS(int x, int y, unsigned int *t_prev) {
+    unsigned int t_now = to_us_since_boot(get_absolute_time());
+    unsigned int dt = t_now - *t_prev;
+    *t_prev = t_now;
+    float fps = 1000000.0f / dt;
+    drawString(x, y, "FPS:");
+    drawFloat(x + 24, y, fps);
+}
+
+void drawFloat(int x, int y, float val) {
+    int whole = (int)val;
+    int decimal = (int)((val - whole) * 100);
+    char str[8];
+    str[0] = '0' + (whole / 10) % 10;
+    str[1] = '0' + whole % 10;
+    str[2] = '.';
+    str[3] = '0' + (decimal / 10) % 10;
+    str[4] = '0' + decimal % 10;
+    str[5] = '\0';
+    drawString(x, y, str);
+}

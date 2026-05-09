@@ -28,36 +28,21 @@ set(PICO_BOARD pico2 CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(HW4 C CXX ASM)
+project(ssd1306_i2c C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(HW4 HW4.c ssd1306.c)
-
-pico_set_program_name(HW4 "HW4")
-pico_set_program_version(HW4 "0.1")
-
-# Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(HW4 0)
-pico_enable_stdio_usb(HW4 1)
-
-# Add the standard library to the build
-target_link_libraries(HW4
-        pico_stdlib)
-
-# Add the standard include files to the build
-target_include_directories(HW4 PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
-)
-
-# Add any user requested libraries
-target_link_libraries(HW4 
-        hardware_i2c
-        hardware_adc
+add_executable(ssd1306_i2c
+        ssd1306_i2c.c
         )
 
-pico_add_extra_outputs(HW4)
+# pull in common dependencies and additional i2c hardware support
+target_link_libraries(ssd1306_i2c pico_stdlib hardware_i2c)
 
+# create map/bin/hex file etc.
+pico_add_extra_outputs(ssd1306_i2c)
+
+# add url via pico_set_program_url

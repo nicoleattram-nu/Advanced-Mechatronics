@@ -3,6 +3,10 @@
 
 void drawChar(int x, int y, char c); // creates each letter
 void drawString(int x, int y, const char *str); // creates sentence based off input
+void getString(char *str); // gets a user generate string
+void drawVolts(int x, int y);
+void drawFPS(int x, int y, unsigned int *t_prev);
+void drawFloat(int x, int y, float val);
 
 // lookup table for all of the ascii characters
 static const char ASCII[96][5] = {
