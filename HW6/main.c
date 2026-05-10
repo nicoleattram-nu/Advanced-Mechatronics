@@ -68,7 +68,7 @@ volatile absolute_time_t start;
 volatile absolute_time_t end;
 volatile absolute_time_t rec_time; 
 
-void led_blinking_task(void);
+// void led_blinking_task(void);
 void hid_task(void);
 
 /*------------- MAIN -------------*/
@@ -96,17 +96,16 @@ int main(void)
     board_init_after_tusb();
   }
 
+  gpio_init(BUTTONPIN); // init button pin
+  gpio_set_dir(BUTTONPIN, GPIO_IN);
+  gpio_set_irq_enabled_with_callback(BUTTONPIN, GPIO_IRQ_EDGE_FALL, true, &gpio_callback); 
+
+
   while (1)
   {
 
     tud_task(); // tinyusb device task
-    led_blinking_task();
-
-    gpio_init(BUTTONPIN); // init button pin
-    gpio_set_dir(BUTTONPIN, GPIO_IN);
-    gpio_set_irq_enabled_with_callback(BUTTONPIN, GPIO_IRQ_EDGE_FALL, true, &gpio_callback); 
-
-
+    // led_blinking_task();
     hid_task();
 
   }
@@ -199,7 +198,7 @@ uint8_t readPin(uint8_t address, uint8_t reg) {
 // Invoked when device is mounted
 void tud_mount_cb(void)
 {
-  blink_interval_ms = BLINK_MOUNTED;
+  blink_interval_ms = 0; //BLINK_MOUNTED;
 }
 
 // Invoked when device is unmounted
@@ -416,11 +415,11 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
       {
         // Capslock On: disable blink, turn led on
         blink_interval_ms = 0;
-        board_led_write(true);
+        gpio_put(LED, 1); // board_led_write(true);
       }else
       {
         // Caplocks Off: back to normal blink
-        board_led_write(false);
+        gpio_put(LED, 0); // board_led_write(false);
         blink_interval_ms = BLINK_MOUNTED;
       }
     }
