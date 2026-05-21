@@ -87,19 +87,4 @@ void writeDAC(int channel, float voltage) {
     cs_select(PIN_CS);
     spi_write_blocking(SPI_PORT, data, 2);
     cs_deselect(PIN_CS);
-
-    // uint8_t data[2]; // this will hold info for the data wave we want to create
-    // data[0] = 0b01110000; // 
-    // data[1] = 0b11111100;
-
-    // data[0] = data[0] | ((channel & 0b1) << 7); // place correct channel
-    // uint16_t binVolts =  (uint16_t)(voltage / 3.3 * 1023); // turn input volts into binary num
-    // if (binVolts > 1023) binVolts = 1023;
-    // data[0] = data[0] | ((binVolts >> 6) & 0b00001111); // place data points
-
-    // data[1] = ((binVolts << 2) & 0xFF);
-
-    // cs_select(PIN_CS);
-    // spi_write_blocking(SPI_PORT, data, 2); // where data is a uint8_t array with length len
-    // cs_deselect(PIN_CS);
 }
