@@ -40,7 +40,7 @@ int main()
 
     while (true) {
         printf("Hello, world!\n");
-        float sin_voltage = (sinf(2.0f * M_1_PI * 2.0f * t) +1.0f ) / 2.0f * 3.3f;
+        float sin_voltage = (sinf(2.0f * M_PI * 2.0f * t) +1.0f ) / 2.0f * 3.3f;
         
         float phase = fmodf(t, 1.0f);          // 0 to 1 over 1 second
         float tri_voltage;
@@ -71,19 +71,35 @@ static inline void cs_deselect(uint cs_pin) {
 }
 
 void writeDAC(int channel, float voltage) { 
-
-    uint8_t data[2]; // this will hold info for the data wave we want to create
-    data[0] = 0b01110000; // 
-    data[1] = 0b11111100;
-
-    data[0] = data[0] | ((channel & 0b1) << 7); // place correct channel
-    uint16_t binVolts =  (uint16_t)(voltage / 3.3 * 1023); // turn input volts into binary num
+    uint8_t data[2];
+    uint16_t binVolts = (uint16_t)(voltage / 3.3f * 1023);
     if (binVolts > 1023) binVolts = 1023;
-    data[0] = data[0] | ((binVolts >> 6) & 0b00001111); // place data points
 
-    data[1] = ((binVolts << 2) & 0xFF);
+    // Bit 15: channel (0=A, 1=B)
+    // Bit 14: BUF (0 = unbuffered)
+    // Bit 13: GA  (1 = 1x gain)
+    // Bit 12: SHDN (1 = active)
+    // Bits 11-2: 10-bit data
+    data[0] = ((channel & 0x1) << 7) | (0 << 6) | (1 << 5) | (1 << 4);
+    data[0] |= (binVolts >> 6) & 0x0F;
+    data[1]  = (binVolts << 2) & 0xFF;
 
     cs_select(PIN_CS);
-    spi_write_blocking(SPI_PORT, data, 2); // where data is a uint8_t array with length len
+    spi_write_blocking(SPI_PORT, data, 2);
     cs_deselect(PIN_CS);
+
+    // uint8_t data[2]; // this will hold info for the data wave we want to create
+    // data[0] = 0b01110000; // 
+    // data[1] = 0b11111100;
+
+    // data[0] = data[0] | ((channel & 0b1) << 7); // place correct channel
+    // uint16_t binVolts =  (uint16_t)(voltage / 3.3 * 1023); // turn input volts into binary num
+    // if (binVolts > 1023) binVolts = 1023;
+    // data[0] = data[0] | ((binVolts >> 6) & 0b00001111); // place data points
+
+    // data[1] = ((binVolts << 2) & 0xFF);
+
+    // cs_select(PIN_CS);
+    // spi_write_blocking(SPI_PORT, data, 2); // where data is a uint8_t array with length len
+    // cs_deselect(PIN_CS);
 }
