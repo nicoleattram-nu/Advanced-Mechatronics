@@ -42,7 +42,7 @@ pico_set_program_version(HW8 "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(HW8 0)
-pico_enable_stdio_usb(HW8 0)
+pico_enable_stdio_usb(HW8 1)
 
 # Add the standard library to the build
 target_link_libraries(HW8
@@ -56,6 +56,7 @@ target_include_directories(HW8 PRIVATE
 # Add any user requested libraries
 target_link_libraries(HW8 
         hardware_spi
+        hardware_dma
         )
 
 pico_add_extra_outputs(HW8)
