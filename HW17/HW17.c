@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "hardware/gpio.h"
+
 
 // I2C defines
 // This example will use I2C0 on GPIO8 (SDA) and GPIO9 (SCL) running at 400KHz.
@@ -9,14 +11,17 @@
 #define I2C_SDA 8
 #define I2C_SCL 9
 
+// AS5600 Encoder 
 #define LED 25 // default Pico2 LED
 #define ADDR 0b0110110 // AS5600 encoder address 
 
-
+// HX711 Load Cell
+#define HX711_DAT 2
+#define HX711_CLK 3
 
 uint16_t readAngle(uint8_t address); // read fucntion
 void setPin(uint8_t address, uint8_t register, uint8_t value); // write function
-
+int32_t hx711_read(void);
 
 
 int main()
@@ -36,6 +41,18 @@ int main()
     gpio_pull_up(I2C_SCL);
     // For more examples of I2C use see https://github.com/raspberrypi/pico-examples/tree/master/i2c
 
+    // HX711 GPIO init (can edit to match HW14)
+    gpio_init(HX711_DAT);
+    gpio_set_dir(HX711_DAT, GPIO_IN);
+    gpio_init(HX711_CLK);
+    gpio_set_dir(HX711_CLK, GPIO_OUT);
+    gpio_put(HX711_CLK, 0);
+
+    // Tare: average first 10 readings as zero offset
+    int32_t tare = 0;
+    for (int i = 0; i < 10; i++) tare += hx711_read();
+    tare /= 10;
+
     while (true) {
         printf("still working...\r\n"); // check serial monitor to show inside the while loop
         
@@ -48,6 +65,8 @@ int main()
         uint16_t angle = readAngle(ADDR); // read Raw Angle register
         float pos = angle * (360.0f/4096.0f);
         printf("Raw Angle: %d  Position: %.2f (deg) \r\n", angle, pos);
+
+        // add load cell sensing
 
     }
 }
@@ -69,3 +88,26 @@ void setPin(uint8_t address, uint8_t reg, uint8_t value){ // write function
     i2c_write_blocking(I2C_PORT, address, buf, 2, false);
 }
 
+int32_t hx711_read(void) {
+    // Wait for DOUT to go low (data ready)
+    while (gpio_get(HX711_DAT)) tight_loop_contents();
+ 
+    int32_t value = 0;
+    for (int i = 0; i < 24; i++) {
+        gpio_put(HX711_CLK, 1);
+        sleep_us(1);
+        value = (value << 1) | gpio_get(HX711_DAT);
+        gpio_put(HX711_CLK, 0);
+        sleep_us(1);
+    }
+ 
+    // 25th pulse → gain 128, channel A
+    gpio_put(HX711_CLK, 1);
+    sleep_us(1);
+    gpio_put(HX711_CLK, 0);
+    sleep_us(1);
+ 
+    // Sign-extend 24-bit → 32-bit
+    if (value & 0x800000) value |= 0xFF000000;
+    return value;
+}
